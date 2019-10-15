@@ -6,14 +6,21 @@ output: html_document
 ---
 
 ```{r}
-
+library(tidyverse)
 ```
 
 ## Problem 4
 
 ## Problem 10
 
+
 ## Problem 16
+Obtain the analysis of variance table using the Spock data.
+```{r 16 work, include=FALSE}
+spock <- read_csv("data/case0502.csv")
+
+
+```
 
 ## Problem 17
 

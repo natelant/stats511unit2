@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "---\ntitle: \"HW 6\"\nauthor: \"Nate Lant\"\ndate: \"October 15, 2019\"\noutput: html_document\n---\n\n```{r setup, include=FALSE}\nknitr::opts_chunk$set(echo = TRUE)\n```\n\n## Problem 4\n\n## Problem 11\n\n\n## Problem 12\n\n\n## Problem 16 \n\n\n## Problem 21\n\n## Problem 23\n\n\n",
+    "created" : 1571169860696.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1591821664",
+    "id" : "6F606498",
+    "lastKnownWriteTime" : 1571170011,
+    "last_content_update" : 1571170011245,
+    "path" : "~/BYU - Masters School/01 Fall 2019/Stats 511/Unit 2/HW 6.Rmd",
+    "project_path" : "HW 6.Rmd",
+    "properties" : {
+        "chunk_output_type" : "console",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

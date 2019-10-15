@@ -1,0 +1,27 @@
+---
+title: "HW 6"
+author: "Nate Lant"
+date: "October 15, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 4
+
+## Problem 11
+
+
+## Problem 12
+
+
+## Problem 16 
+
+
+## Problem 21
+
+## Problem 23
+
+
