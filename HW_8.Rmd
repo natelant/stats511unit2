@@ -19,16 +19,17 @@ library(tidyverse)
 
 
 ## Problem 19
-```{r 6setup, include=FALSE}
+```{r 19setup, include=FALSE}
 pollen <- read_csv("data/ex0327.csv")
 queen <- pollen %>%
   filter(BeeType == "Queen")
 ```
 Reconsider the pollen removal data of Exercise 3.27 and the regression of pollen removed on time spent on ﬂower, for the bumblebee queens only. 
 
-***Answer:***
+
 (a) What problems are evident in the residual plot? 
-```{r bees 6a, echo=FALSE}
+***Answer:*** The problem with the residuals plot is that there are major outliers.
+```{r bees 19a, echo=FALSE}
 pollenremoved <- queen$PollenRemoved
 timeonflower <- queen$DurationOfVisit
 
@@ -36,10 +37,9 @@ timeonflower <- queen$DurationOfVisit
 bees.residual <- resid(lm(pollenremoved ~ timeonflower, data = queen))
 plot(bees.residual ~ timeonflower)
 ```
-The problem with the residuals plot is that there are major outliers.
 
 (b) Do log transformations of Y or X help any? 
-```{r bees 6b, echo = FALSE}
+```{r bees 19b, echo = FALSE}
 pollenremoved.log <- log(queen$PollenRemoved)
 timeonflower.log <- log(queen$DurationOfVisit)
 
@@ -55,7 +55,7 @@ plot(bees.residual.logy ~ timeonflower)
 ```
 
 (c) Try ﬁtting the regression only for those times less than 31 seconds (i.e., excluding the two longest times). Does this ﬁt better? 
-```{r bees 6c, echo=FALSE}
+```{r bees 19c, echo=FALSE}
 queen.edited <- queen %>% 
   filter(!(queen$DurationOfVisit >= 31))
 
@@ -67,6 +67,33 @@ abline(lm(pollenremoved.edited ~ timeonflower.edited))
 ```
 
 ## Problem 20
+
+```{r 20setup, include=FALSE}
+votes <- read_csv("data/ex0820.csv")
+votes.out <- votes %>%
+  filter(.$Disputed == "no")
+```
+
+(a) Draw a scatterplot of Democratic percentage of absentee ballots versus Democratic percentage of machine-counted ballots. Use a separate plotting symbol to highlight the disputed election. ***See plot below***
+```{r 20a, echo=F}
+ggplot(votes, aes(x=DemPctOfAbsenteeVotes, y=DemPctOfMachineVotes, shape=Disputed)) +
+  geom_point(color='#2980B9', size = 4) 
+```
+
+(b) Fit the simple linear regression of absentee percentage on machine-count percentage, excluding the disputed election. Draw this line on the scatterplot. Also include a 95% prediction band. What does this plot reveal about the unusualness of the absentee percentage in the disputed election? ***See plot below***
+```{r 20b, echo=F}
+ggplot(votes.out, aes(x=DemPctOfAbsenteeVotes, y=DemPctOfMachineVotes, shape=Disputed)) +
+  geom_point(color='#2980B9', size = 4) +
+  geom_smooth(method = "lm")
+```
+
+(c) Find the prediction and standard error of prediction from this ﬁt if the machine-count percentage is 49.3 (as it is for the disputed election). How many estimated standard deviations is the observed absentee percentage, 79.0, from this predicted value? Compare this answer to a t-distribution (with degrees of freedom equal to the residual degrees of freedom in the regression ﬁt) to obtain a p-value. 
+```{r 20c, echo=F}
+vote.lm <- lm(DemPctOfMachineVotes ~ DemPctOfAbsenteeVotes, data = votes)
+summary(vote.lm) %>% pander::pander()
+```
+
+(d) Outliers and data snooping. The p-value in (c) makes sense if the investigation into the 1993 election was prompted by some other reason. Since it was prompted because the absentee percentage seemed too high, however, the p-value in (c) should be adjusted for data snooping. Adjust the p-value with a Bonferroni correction to account for all 22 residuals that could have been similarly considered. 
 
 
 ## Problem 25
