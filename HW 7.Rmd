@@ -1,0 +1,96 @@
+---
+title: "HW 7"
+author: "Nate Lant"
+date: "October 16, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library("tidyverse")
+library("car")
+```
+
+## Problem 2
+Big Bang Data. Explain why improved measurement of distance would lead to more precise estimates of the regression coefﬁcients.
+
+**Answer** It is hard to measure a relationship between distance and velocity if the measurement of distance is inaccurate. The Y variable (distance) is described as a function of the explanitory variable X (velocity). While velocity is accurately measured, it cannot explain the response variable without accurate measurements of the distance.
+
+## Problem 9
+
+
+## Problem 15
+(a) Draw a scatterplot of proportion of pollen removed versus duration of visit, for thebumblebee queens. 
+
+```{r a bees, include=FALSE}
+types <- list('n', 'n', 'c')
+bees <- read_csv("data/ex0327.csv",
+                 col_names = c("Pollen", "Hours", "Bee"), 
+                 skip = 1)
+
+# Use this code...
+queenbees <- filter(bees, Bee == "Queen")
+```
+
+(b) Fit the simple linear regression of proportion of pollen removed on duration of visit. Draw the estimated regression line on the scatterplot.
+
+```{r b bees, echo=FALSE}
+(bees.lm <- lm(queenbees$Pollen ~ queenbees$Hours))
+plot(queenbees$Hours, queenbees$Pollen)
+abline(bees.lm)
+```
+
+## Problem 21
+```{r planets setup, include=FALSE}
+planet <- read_csv("data/ex0721.csv")
+(planet.lm <- lm(planet$Distance ~ planet$Order))
+```
+### First, consider the planets without the astroid belt.
+(a) draw a scatterplot of log of distance versus order
+(b) include the least squares estimated simple linear regression line on the plot
+```{r planets a-c, echo=FALSE}
+Distance <- log(planet$Distance)
+plot(planet$Order, Distance)
+(planet.lm <- lm(Distance ~ planet$Order))
+abline(planet.lm)
+
+```
+
+(c) ﬁnd the estimate of standard deviation from the least squares ﬁt
+
+***Answer*** the residual standard error is `r round(summary(planet.lm)$sigma, 3)`.
+
+(d) draw a scatterplot of the residuals versus the ﬁtted values from this ﬁt. 
+```{r planet d, echo=FALSE}
+plot(fitted.values(planet.lm),planet.lm$residuals)
+```
+
+### Now consider the data including the astroid belt.
+(e) draw a scatterplot of log of distance versus order, 
+(f) include the least squares estimated simple linear regression line on the plot, 
+```{r planets e-f, echo=FALSE}
+Distance2 <- log(planet$Distance2)
+plot(planet$Order2, Distance2)
+(planet.lm2 <- lm(Distance2 ~ planet$Order2))
+abline(planet.lm2)
+```
+
+(g) ﬁnd the estimate of sigma from the least squares ﬁt
+
+***Answer*** the residual standard error is `r round(summary(planet.lm2)$sigma, 3)`.
+
+(h) draw a scatter plot of the residuals versus the ﬁtted values from this ﬁt. 
+```{r planet h, echo=FALSE}
+plot(fitted.values(planet.lm2),planet.lm2$residuals)
+```
+
+(i) Does it appear that the simple linear (straight line) regression model ﬁts better to the ﬁrst set of 9 planets or the second set of 10 “planets”? Explain. 
+
+
+## Problem 25
+
+## Problem 29
+
+
+

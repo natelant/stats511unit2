@@ -1,0 +1,72 @@
+---
+title: "HW 8"
+author: "Nate Lant"
+date: "10/28/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Problem 6
+
+
+## Problem 12
+
+
+## Problem 19
+```{r 6setup, include=FALSE}
+pollen <- read_csv("data/ex0327.csv")
+queen <- pollen %>%
+  filter(BeeType == "Queen")
+```
+Reconsider the pollen removal data of Exercise 3.27 and the regression of pollen removed on time spent on ﬂower, for the bumblebee queens only. 
+
+***Answer:***
+(a) What problems are evident in the residual plot? 
+```{r bees 6a, echo=FALSE}
+pollenremoved <- queen$PollenRemoved
+timeonflower <- queen$DurationOfVisit
+
+# Plot the residuals
+bees.residual <- resid(lm(pollenremoved ~ timeonflower, data = queen))
+plot(bees.residual ~ timeonflower)
+```
+The problem with the residuals plot is that there are major outliers.
+
+(b) Do log transformations of Y or X help any? 
+```{r bees 6b, echo = FALSE}
+pollenremoved.log <- log(queen$PollenRemoved)
+timeonflower.log <- log(queen$DurationOfVisit)
+
+# Plot various transformation residual plots
+## Plot log of explanitory variable = time on flower
+bees.residual.logx <- resid(lm(pollenremoved ~ timeonflower.log, data = queen))
+plot(bees.residual.logx ~ timeonflower.log)
+
+# Plot log of the response variable
+bees.residual.logy <- resid(lm(pollenremoved.log ~ timeonflower, data = queen))
+plot(bees.residual.logy ~ timeonflower)
+
+```
+
+(c) Try ﬁtting the regression only for those times less than 31 seconds (i.e., excluding the two longest times). Does this ﬁt better? 
+```{r bees 6c, echo=FALSE}
+queen.edited <- queen %>% 
+  filter(!(queen$DurationOfVisit >= 31))
+
+timeonflower.edited <- queen.edited$DurationOfVisit
+pollenremoved.edited <- queen.edited$PollenRemoved
+
+plot(pollenremoved.edited ~ timeonflower.edited)
+abline(lm(pollenremoved.edited ~ timeonflower.edited))
+```
+
+## Problem 20
+
+
+## Problem 25
