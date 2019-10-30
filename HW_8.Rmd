@@ -74,24 +74,32 @@ votes.out <- votes %>%
   filter(.$Disputed == "no")
 ```
 
-(a) Draw a scatterplot of Democratic percentage of absentee ballots versus Democratic percentage of machine-counted ballots. Use a separate plotting symbol to highlight the disputed election. ***See plot below***
+(a) Draw a scatterplot of Democratic percentage of absentee ballots versus Democratic percentage of machine-counted ballots. Use a separate plotting symbol to highlight the disputed election. **See plot below**
 ```{r 20a, echo=F}
-ggplot(votes, aes(x=DemPctOfAbsenteeVotes, y=DemPctOfMachineVotes, shape=Disputed)) +
+ggplot(votes, aes(y=DemPctOfAbsenteeVotes, x=DemPctOfMachineVotes, shape=Disputed)) +
   geom_point(color='#2980B9', size = 4) 
 ```
 
 (b) Fit the simple linear regression of absentee percentage on machine-count percentage, excluding the disputed election. Draw this line on the scatterplot. Also include a 95% prediction band. What does this plot reveal about the unusualness of the absentee percentage in the disputed election? ***See plot below***
 ```{r 20b, echo=F}
-ggplot(votes.out, aes(x=DemPctOfAbsenteeVotes, y=DemPctOfMachineVotes, shape=Disputed)) +
+ggplot(votes.out, aes(y=DemPctOfAbsenteeVotes, x=DemPctOfMachineVotes, shape=Disputed)) +
   geom_point(color='#2980B9', size = 4) +
   geom_smooth(method = "lm")
 ```
 
 (c) Find the prediction and standard error of prediction from this ﬁt if the machine-count percentage is 49.3 (as it is for the disputed election). How many estimated standard deviations is the observed absentee percentage, 79.0, from this predicted value? Compare this answer to a t-distribution (with degrees of freedom equal to the residual degrees of freedom in the regression ﬁt) to obtain a p-value. 
+
 ```{r 20c, echo=F}
-vote.lm <- lm(DemPctOfMachineVotes ~ DemPctOfAbsenteeVotes, data = votes)
+vote.lm <- lm(DemPctOfAbsenteeVotes~DemPctOfMachineVotes, data = votes)
 summary(vote.lm) %>% pander::pander()
 ```
+
+**Answer:** 
+$$ y = \beta_{0} + \beta_{1}x $$ where $\beta_{0}$ is `r summary(vote.lm)$coefficient[1, 1] %>% round(2)` and $\beta_{1}$ is `r summary(vote.lm)$coefficient[2, 1] %>% round(2)`
+
+So, when x = 49.3 y = `r round(summary(vote.lm)$coefficient[1,1]+summary(vote.lm)$coefficient[2,1]*49.3,1)` This is more than 5 standard deviations away!
+
+Comparing this to the t-distribution, the p-value is significant.
 
 (d) Outliers and data snooping. The p-value in (c) makes sense if the investigation into the 1993 election was prompted by some other reason. Since it was prompted because the absentee percentage seemed too high, however, the p-value in (c) should be adjusted for data snooping. Adjust the p-value with a Bonferroni correction to account for all 22 residuals that could have been similarly considered. 
 
