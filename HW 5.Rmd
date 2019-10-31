@@ -3,10 +3,14 @@ title: "Stats 511 HW 5 - Comparisons among several samples"
 author: "Nate Lant"
 date: "October 14, 2019"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
-```{r}
+```{r setup, include=F}
 library(tidyverse)
+library(pander)
+library(ploty)
 ```
 
 ## Problem 4
@@ -19,12 +23,53 @@ Obtain the analysis of variance table using the Spock data.
 ```{r 16 work, include=FALSE}
 spock <- read_csv("data/case0502.csv")
 
+aov(Percent ~ Judge, data=spock) %>%
+  pander()
 
 ```
 
 ## Problem 17
 
 ## Problem 18
+```{r 18setup, include = F}
+rat <- read_csv("data/ex0518.csv")
+```
+
+(a) Obtain estimated means for the model with six independent samples, one for each treatment. Determine the residuals and plot them versus the estimated means. Plot the residuals versus the day on which the investigation was conducted. Is there any indication that the methods of this chapter are not appropriate? 
+
+**Answer:** The estimated means are reported below. The residuals, plottted versus the estimated means, are also displayed below. 
+```{r setup18a, echo=F}
+# Estimated means
+rat %>% select(Protein, Treatment) %>%
+  group_by(Treatment) %>%
+  summarise(mean = mean(Protein)) %>%
+  pander()
+
+# Estimated means in a vector
+rat.means <- rat %>% select(Protein, Treatment) %>%
+  group_by(Treatment) %>%
+  summarise(mean = mean(Protein)) %>% c()
+
+# Residuals
+rat.resid <- lm(Protein ~ Treatment, data = rat) %>%
+  resid()
+
+ggplot(rat, aes(x=rat.means$mean, y=))
+
+
+
+# Boxplot visualization
+rat %>% ggplot(aes(x=Treatment, y=Protein, shape=Day, color=TrtDayGroup)) +
+  geom_boxplot(alpha=0.1) + geom_jitter(width = 0.1, size=4) %>%
+  ggploty()
+
+
+```
+
+(b) Obtain estimated means for the model with 10 independent samples, one from each treatment-day combination. Calculate the ANOVA F-test to see whether these 10 groups have equal means. 
+
+(c) Use (a) and (b) and the methods of Section 5.4.1, to test whether the means for the control groups on different days are different. That is, compare the model with 10 different means to the model in which there are 6 different means.
+
 
 ## Problem 23
 
@@ -32,22 +77,3 @@ spock <- read_csv("data/case0502.csv")
 
 
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
