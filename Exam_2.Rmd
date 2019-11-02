@@ -1,0 +1,117 @@
+---
+title: "Exam 2"
+author: "Nate Lant"
+date: "11/2/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+library(pander)
+```
+
+# Problem 1 - Crabs' Strength
+```{r 1setup}
+crablength <- read_excel("examdata/question1E2.xlsx")
+```
+The data provided describes the lengh of claw and the strength of each for `r nrow(crablength)` crabs. Is there a relationship between the length of a claw and the amount of force it produces? Let the force of a claw be the response variable, described by the length of the claw.
+
+In this problem, we will regress force on length of claw sizes of crabs. First lets look at the data, and the scatter plot is shown below. It looks as if the data has a "horn" distribution.
+
+```{r crab, echo=F}
+# Lets run the model
+crab.lm <- lm(force ~ length, data=crablength)
+
+# Make the scatter plot
+ggplot(crablength, aes(x = length, y = force)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+### Natural log transform
+Because of the horned distribution in the scatter plot shown above, let's try a log transform in the data and check the linear regression.
+```{r logcrabs, echo=F}
+ggplot(crablength, aes(x = log(length), y = log(force))) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+<!-- This still has a curve in the distribution of log scores --> 
+This distribution looks much better. Now we can properly analyze the regression.
+
+### Conclusion
+
+
+
+# Problem 2 - University Payday
+```{r 2setup, include=F}
+money <- read_excel("examdata/question2E2.xlsx")
+
+```
+
+The data provided compares salaries of `r nrow(money)` graduates from three universities, `r unique(money$University)`. Below is the visualization of the data as a boxplot and table of means and standard deviation.
+
+```{r moneyvisualize, echo=F}
+# boxplot
+
+ggplot(money, aes(x=University, y=Salary)) +
+  geom_boxplot() +
+  geom_jitter(position=position_jitter(width=.1, height=0))
+
+# mean and sd table
+money %>% group_by(University) %>%
+  summarise(Mean = mean(Salary), St.Dev = sd(Salary)) %>%
+  pander()
+```
+
+Just from looking at the data, it's clear that Harvard has some major outliers, but you can't really distinguish any other information. Let's try another log transform (natural log) on the salary.
+
+```{r logmoneyvisualize, echo=F}
+ggplot(money, aes(x=University, y=log(Salary))) +
+  geom_boxplot() +
+  geom_jitter(position=position_jitter(width=.2, height=0), alpha = .5)
+```
+
+Lets run an Analysis Of Variance (ANOVA).
+
+```{r moneyanova, echo=F}
+aov(Salary ~ University, data = money) %>%
+  pander()
+```
+
+### Conclusion
+
+# Problem 3 - Cars will wait
+```{r 3setup}
+wait <- read_excel("examdata/question3E2.xlsx")
+```
+
+
+
+```{r waittimevisualize, echo=F}
+# scatter plot
+ggplot(data = wait, aes(x=Cars, y=Time)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r analysis, echo=F}
+wait.lm <- lm(Time ~ Cars, data = wait)
+```
+
+<!-- a) waht is the predicted mean waiting time with two cars in line? --> 
+According to the linear regression equation 
+$$ y = \beta_{0} + \beta_{1}x $$ where $\beta_{0}$ is `r summary(wait.lm)$coefficient[1, 1] %>% round(2)` and $\beta_{1}$ is `r summary(wait.lm)$coefficient[2, 1] %>% round(2)`, we can expect that when there are two cars waiting (x = 2), we can expect an average wait time of y = `r round(summary(wait.lm)$coefficient[1,1]+summary(wait.lm)$coefficient[2,1]*2,1)` minutes.
+
+<!-- b) what about 20 cars! --> 
+sing the same least squares line, and if there 20 cars waiting (x = 20), we can expect an average wait time of y = `r round(summary(wait.lm)$coefficient[1,1]+summary(wait.lm)$coefficient[2,1]*20,1)` minutes. However, this information cannot be reliable. This is called extrapolation, where we predict a value outside of the linear regression model. It is unreliable because the trends in wait times could differ outside of the measured scope of 10 vehicles in line.
+
+# Problem 4
+```{}
+read_excel("examdata/question4E2.xlsx")
+
+```
