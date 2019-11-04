@@ -12,20 +12,18 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readxl)
 library(pander)
+library(formattable)
 ```
 
 # Problem 1 - Crabs' Strength
-```{r 1setup}
+```{r 1setup, include=F}
 crablength <- read_excel("examdata/question1E2.xlsx")
 ```
-The data provided describes the lengh of claw and the strength of each for `r nrow(crablength)` crabs. Is there a relationship between the length of a claw and the amount of force it produces? Let the force of a claw be the response variable, described by the length of the claw.
+The data provided describes the lengh of claw and the strength of each for `r nrow(crablength)` crabs. We will test if there is a relationship between the length of a claw and the amount of force it produces. Let the force of a claw be the response variable (y), described by the length of the claw (x).
 
 In this problem, we will regress force on length of claw sizes of crabs. First lets look at the data, and the scatter plot is shown below. It looks as if the data has a "horn" distribution.
 
 ```{r crab, echo=F}
-# Lets run the model
-crab.lm <- lm(force ~ length, data=crablength)
-
 # Make the scatter plot
 ggplot(crablength, aes(x = length, y = force)) +
   geom_point() +
@@ -33,18 +31,24 @@ ggplot(crablength, aes(x = length, y = force)) +
 ```
 
 ### Natural log transform
-Because of the horned distribution in the scatter plot shown above, let's try a log transform in the data and check the linear regression.
+Because of the horned distribution in the scatter plot shown above, let's try a log transform in the data and check the linear regression. The distribution is most linear when a log transform is applied to the force (response) variable, as shown below.
 ```{r logcrabs, echo=F}
-ggplot(crablength, aes(x = log(length), y = log(force))) +
+ggplot(crablength, aes(x = (length), y = log(force))) +
   geom_point() +
   geom_smooth(method = "lm")
 ```
 
 <!-- This still has a curve in the distribution of log scores --> 
-This distribution looks much better. Now we can properly analyze the regression.
+This distribution looks much better. Now we can properly analyze the regression. The equation is the following....
+```{r crabmodel, echo=F}
+# Lets run the model WHICH VARIABLE DO I LOG????
+crab.lm <- lm(log(force) ~ length, data=crablength)
+```
+
+<!-- show the equation, the coefficients the strength of the model, recognize what can and can't be extrapolated. --> 
 
 ### Conclusion
-
+<!---remember to transform back!! i think this is chapter 8 --->
 
 
 # Problem 2 - University Payday
@@ -65,7 +69,7 @@ ggplot(money, aes(x=University, y=Salary)) +
 # mean and sd table
 money %>% group_by(University) %>%
   summarise(Mean = mean(Salary), St.Dev = sd(Salary)) %>%
-  pander()
+  formattable(align = c("l", "c", "c"))
 ```
 
 Just from looking at the data, it's clear that Harvard has some major outliers, but you can't really distinguish any other information. Let's try another log transform (natural log) on the salary.
@@ -86,10 +90,12 @@ aov(Salary ~ University, data = money) %>%
 ### Conclusion
 
 # Problem 3 - Cars will wait
-```{r 3setup}
+```{r 3setup, include=F}
+wait <- read_excel("examdata/question3E2.xlsx")
+
 wait <- read_excel("examdata/question3E2.xlsx")
 ```
-
+At Quicky Lube, there is often a line of cars waiting for service. Over the period of three months, data were collected at randomly chosen times to see how wait time changed because of the number of cars in line.
 
 
 ```{r waittimevisualize, echo=F}
@@ -104,14 +110,46 @@ wait.lm <- lm(Time ~ Cars, data = wait)
 ```
 
 <!-- a) waht is the predicted mean waiting time with two cars in line? --> 
-According to the linear regression equation 
-$$ y = \beta_{0} + \beta_{1}x $$ where $\beta_{0}$ is `r summary(wait.lm)$coefficient[1, 1] %>% round(2)` and $\beta_{1}$ is `r summary(wait.lm)$coefficient[2, 1] %>% round(2)`, we can expect that when there are two cars waiting (x = 2), we can expect an average wait time of y = `r round(summary(wait.lm)$coefficient[1,1]+summary(wait.lm)$coefficient[2,1]*2,1)` minutes.
+According to the linear regression equation:  
+$$ y = \beta_{0} + \beta_{1}x $$ where $\beta_{0}$ is **`r summary(wait.lm)$coefficient[1, 1] %>% round(2)`** and $\beta_{1}$ is **`r summary(wait.lm)$coefficient[2, 1] %>% round(2)`**, we can expect that for every increase in 1 car in line, the wait time will on average increase by **`r summary(wait.lm)$coefficient[2, 1] %>% round(2)`** minutes.
+
+When there are two cars waiting (x = 2), we can expect an average wait time of y = **`r round(summary(wait.lm)$coefficient[1,1]+summary(wait.lm)$coefficient[2,1]*2,1)`** minutes.
 
 <!-- b) what about 20 cars! --> 
-sing the same least squares line, and if there 20 cars waiting (x = 20), we can expect an average wait time of y = `r round(summary(wait.lm)$coefficient[1,1]+summary(wait.lm)$coefficient[2,1]*20,1)` minutes. However, this information cannot be reliable. This is called extrapolation, where we predict a value outside of the linear regression model. It is unreliable because the trends in wait times could differ outside of the measured scope of 10 vehicles in line.
+Using the same least squares line, and if there 20 cars waiting (x = 20), we can expect an average wait time of y = **`r round(summary(wait.lm)$coefficient[1,1]+summary(wait.lm)$coefficient[2,1]*20,1)`** minutes. 
 
-# Problem 4
-```{}
-read_excel("examdata/question4E2.xlsx")
+<!-- C) why is the answer in part b not reliable? --> 
+However, this information cannot be reliable. This is called extrapolation, where we predict a value outside of the linear regression model. It is unreliable because the trends in wait times could differ outside of the measured scope of 10 vehicles in line.
 
+# Problem 4 - Teaching Methods
+```{r 4setup, include=F}
+method <- read_excel("examdata/question4E2.xlsx")
 ```
+Three new methods of teaching are being introduced, and we will decide if there are any differences between any of the mean scores for the different methods. We are only interested in comparisons between the conventional method and each of the new methods.
+
+First, see the boxplot visualization and mean summary tables below.
+```{r 4analysis, echo=F}
+# boxplot
+ggplot(data = method, aes(x = Method, y = Score)) +
+  geom_boxplot() +
+  geom_jitter(position=position_jitter(width=.1, height=0), alpha = .5)
+
+# mean summary
+method %>% group_by(Method) %>%
+  summarise(Mean = mean(Score), St.Dev = round(sd(Score), 2)) %>%
+  formattable(align = c("l", "c", "c"))
+```
+
+Because there are no assumptions that are compromised <!-- what are the assumptions of an anova test? --> then we can run an Analysis of Variance to decide if there is a significant difference in teaching methods. The results are displayed below.
+
+```{r 4anova, echo=F}
+method.aov <- aov(Score ~ Method, data = method)
+pander(method.aov)
+```
+
+### Conclusion
+<!--- With a p-value of  r round(method.aov$pvalue)  This isn't working, do i actually use a pvalue? or maybe the f stat?---> 
+
+
+
+
