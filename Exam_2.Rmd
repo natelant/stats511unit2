@@ -80,19 +80,23 @@ ggplot(money, aes(x=University, y=log(Salary))) +
   geom_jitter(position=position_jitter(width=.2, height=0), alpha = .5)
 ```
 
-Lets run an Analysis Of Variance (ANOVA).
+Lets run an Analysis Of Variance (ANOVA). The ANOVA test will show if there is a significant difference in the means, but will not tell us which variable is significantly different from the others. The Tukey-Kramer procedure is also shown below. This procedure compares every possible mean comparison combination and assigns a respective p-value. This will tell us which university is significantly different from the others in terms of salary, the response variable.
 
 ```{r moneyanova, echo=F}
-aov(Salary ~ University, data = money) %>%
+aov(log(Salary) ~ University, data = money) %>%
+  pander()
+
+# TUKEY test.
+money.anova <- aov(log(Salary) ~ University, data = money)
+TukeyHSD(money.anova) %>%
   pander()
 ```
 
 ### Conclusion
+From the Tukey-Kramer Procedure, the significant p-values are from the comparisons Harvard-BYU and Slippery Rock-Harvard. This shows that the mean salary of graduates from Harvard is significanly different those of other universityies.
 
 # Problem 3 - Cars will wait
 ```{r 3setup, include=F}
-wait <- read_excel("examdata/question3E2.xlsx")
-
 wait <- read_excel("examdata/question3E2.xlsx")
 ```
 At Quicky Lube, there is often a line of cars waiting for service. Over the period of three months, data were collected at randomly chosen times to see how wait time changed because of the number of cars in line.
