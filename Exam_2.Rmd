@@ -39,16 +39,46 @@ ggplot(crablength, aes(x = (length), y = log(force))) +
 ```
 
 <!-- This still has a curve in the distribution of log scores --> 
-This distribution looks much better. Now we can properly analyze the regression. The equation is the following....
-```{r crabmodel, echo=F}
-# Lets run the model WHICH VARIABLE DO I LOG????
-crab.lm <- lm(log(force) ~ length, data=crablength)
+This distribution looks much better. Now we can properly analyze the regression. Lets have a look at the residuals plot.
+```{r crabsresiduals, echo=F}
+crab.lm <- lm(log(force) ~ (length), data = crablength)
+crablength$residuals <- residuals(crab.lm)
+
+ggplot(crablength, aes(x = length, y = crablength$residuals)) +
+  geom_point() +
+  geom_abline(slope = 0) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme_bw()
 ```
 
-<!-- show the equation, the coefficients the strength of the model, recognize what can and can't be extrapolated. --> 
+### Results
+From the linear regression line, the equation is 
+$$ y = \beta_{0} + \beta_{1}x $$ where 
+$\beta_{0}$ is **`r summary(crab.lm)$coefficient[1, 1] %>% round(2)`** and 
+$\beta_{1}$ is **`r summary(crab.lm)$coefficient[2, 1] %>% round(3)`**. 
+This is the equation of the line according to the transformed data. This line has specific interpretation. Because the response variable was what was log transformed, the equation looks like the following: 
+$$ log(y) = \beta_{0} + \beta_{1}x $$ 
+The interpretation for the median of y is 
+$$ exp(\beta_{0})exp(\beta_{1}x) $$
+This means that an increase in length of one centimeter is associated with a multiplicitive change of 
+exp(`r summary(crab.lm)$coefficient[2, 1] %>% round(3)`) = 
+**`r exp(summary(crab.lm)$coefficient[2, 1]) %>% round(3)`** in the median claw strength.
+
+The confidence interval is shown on the linear regression line. However, to construct a confidence interval at a specific length (let's say 20 cm), the follow code can be used.
+
+```{r clawconfidence}
+crab.lm <- lm(log(force) ~ (length), data = crablength)
+# set the claw length at 20 cm
+newdata.crab <- data.frame(length = 20)
+predict(crab.lm, newdata.crab, interval = "confidence") %>% round(3)
+```
 
 ### Conclusion
-<!---remember to transform back!! i think this is chapter 8 --->
+From the information provided, there was no randomization. Therefore, we cannot infer to the population. From this sample, there is an association with length of claw and its strength. 
+An increase in length of one centimeter is associated with a multiplicitive change of 
+exp(`r summary(crab.lm)$coefficient[2, 1] %>% round(3)`) = 
+**`r exp(summary(crab.lm)$coefficient[2, 1]) %>% round(3)`** in the median claw strength.
+The confidence interval is shown in the linear model above. 
 
 
 # Problem 2 - University Payday
@@ -58,8 +88,10 @@ money <- read_excel("examdata/question2E2.xlsx")
 ```
 
 The data provided compares salaries of `r nrow(money)` graduates from three universities, `r unique(money$University)`. Below is the visualization of the data as a boxplot and table of means and standard deviation.
+We want to know if the means of each group's salary are different. For now we assume the null hypothesis:
+$$ \mu_{BYU}=\mu_{Harvard}=\mu_{Slippery Rock}   $$
 
-```{r moneyvisualize, echo=F}
+```{r moneyvisualize, echo=F} 
 # boxplot
 
 ggplot(money, aes(x=University, y=Salary)) +
@@ -78,26 +110,47 @@ Just from looking at the data, it's clear that Harvard has some major outliers, 
 ggplot(money, aes(x=University, y=log(Salary))) +
   geom_boxplot() +
   geom_jitter(position=position_jitter(width=.2, height=0), alpha = .5)
+
+# mean and sd table
+money %>% group_by(University) %>%
+  summarise(Mean = mean(log(Salary)), St.Dev = sd(log(Salary))) %>%
+  formattable(align = c("l", "c", "c"))
 ```
 
-Lets run an Analysis Of Variance (ANOVA).
+From the log transform, the mean and standard deviations are similar. Lets run an Analysis Of Variance (ANOVA).
 
 ```{r moneyanova, echo=F}
-aov(Salary ~ University, data = money) %>%
+aov(log(Salary) ~ University, data = money) %>%
   pander()
 ```
 
+### Multiple Group Mean Comparison
+The p-value is very high, and therefore means there is a significant difference in the means. However, just from the ANOVA test, we cannot determine which mean is significantly different. To analyze the difference in means, lets use the Kruskal Wallace test. This test does not require the assumption that the distributions of each group are normal. In this case, Harvard is skewed, even after the log transformation. 
+
+```{r kruskaltest, echo=F}
+kruskal.test(log(Salary) ~ University, data = money) %>%
+  pander()
+```
+
+Now let's do a Tukey-Kramer test to compare the difference in means.
+```{r moneytukey, echo=F, warning=F}
+money.anova <- aov(log(Salary) ~ University, data = money)
+TukeyHSD(money.anova) %>%
+  pander()
+```
+
+This data shows the comparison of every possible mean and its respective p-value. In this case, only Harvard has a significant difference when compared to every other school.
+
 ### Conclusion
+In this research, the students were randomly selected, but they were not randomly assigned. This means that we can infer the associations to the population, but we cannot infer causality. The p-values from the Tukey test were significant in that Harvard's mean salary is significantly different from the mean salary of other schools.
 
 # Problem 3 - Cars will wait
 ```{r 3setup, include=F}
 wait <- read_excel("examdata/question3E2.xlsx")
-
-wait <- read_excel("examdata/question3E2.xlsx")
 ```
-At Quicky Lube, there is often a line of cars waiting for service. Over the period of three months, data were collected at randomly chosen times to see how wait time changed because of the number of cars in line.
+At Quicky Lube, there is often a line of cars waiting for service. Over the period of three months, data were collected at randomly chosen times to see how wait time changed because of the number of cars in line. The null hypothesis is that there is no association between the number of cars in line and the wait time.
 
-
+Below is the scatterplot of number of cars regressed on the wait time and the summary of the linear regression.
 ```{r waittimevisualize, echo=F}
 # scatter plot
 ggplot(data = wait, aes(x=Cars, y=Time)) +
@@ -107,19 +160,38 @@ ggplot(data = wait, aes(x=Cars, y=Time)) +
 
 ```{r analysis, echo=F}
 wait.lm <- lm(Time ~ Cars, data = wait)
+summary(wait.lm) %>% pander()
+
+# conf int
+newdata.wait <- data.frame(Cars = 2)
+conf.wait <- predict(wait.lm, newdata.wait, interval = "confidence") %>% 
+  round(3)
+
+# conf int with 20 cars
+newdata.wait.20 <- data.frame(Cars = 20)
+conf.wait.20 <- predict(wait.lm, newdata.wait.20, interval = "confidence") %>% 
+  round(2)
 ```
 
 <!-- a) waht is the predicted mean waiting time with two cars in line? --> 
 According to the linear regression equation:  
 $$ y = \beta_{0} + \beta_{1}x $$ where $\beta_{0}$ is **`r summary(wait.lm)$coefficient[1, 1] %>% round(2)`** and $\beta_{1}$ is **`r summary(wait.lm)$coefficient[2, 1] %>% round(2)`**, we can expect that for every increase in 1 car in line, the wait time will on average increase by **`r summary(wait.lm)$coefficient[2, 1] %>% round(2)`** minutes.
 
-When there are two cars waiting (x = 2), we can expect an average wait time of y = **`r round(summary(wait.lm)$coefficient[1,1]+summary(wait.lm)$coefficient[2,1]*2,1)`** minutes.
+When there are two cars waiting (x = 2), we can expect an average wait time of y = **`r round(summary(wait.lm)$coefficient[1,1]+summary(wait.lm)$coefficient[2,1]*2,1)`** minutes with a confidence interval from
+**`r conf.wait[1, 2]%>%round(2)  `** to  **`r conf.wait[1, 3]  `** minutes.
 
 <!-- b) what about 20 cars! --> 
-Using the same least squares line, and if there 20 cars waiting (x = 20), we can expect an average wait time of y = **`r round(summary(wait.lm)$coefficient[1,1]+summary(wait.lm)$coefficient[2,1]*20,1)`** minutes. 
+Using the same least squares line, and if there 20 cars waiting (x = 20), we can expect an average wait time of y = **`r round(summary(wait.lm)$coefficient[1,1]+summary(wait.lm)$coefficient[2,1]*20,1)`** minutes with a confidence interval from
+**`r conf.wait.20[1, 2]%>%round(2)  `** to  **`r conf.wait.20[1, 3]  `** minutes.
 
 <!-- C) why is the answer in part b not reliable? --> 
 However, this information cannot be reliable. This is called extrapolation, where we predict a value outside of the linear regression model. It is unreliable because the trends in wait times could differ outside of the measured scope of 10 vehicles in line.
+
+### Conclusion
+From the information provided, the times were selected randomly, but the subjects were not randomly assigned. Therefore the associations found in this study can be infered to a population, but causality cannot be infered. The results show strong association with an 
+$ R^2 $ of `r summary(wait.lm)$r.squared%>%round(3)`
+and a p-value of `r summary(wait.lm)$coefficients[1,4]%>%round(3)`. Because of this p-value, the association is suggestive but not inconclusive.
+The confidence intervals are shown above, and are represented in the linear model by the shaded area outside of the line.
 
 # Problem 4 - Teaching Methods
 ```{r 4setup, include=F}
