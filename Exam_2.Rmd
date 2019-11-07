@@ -135,6 +135,11 @@ From the log transform, the mean and standard deviations are similar. Lets run a
 ```{r moneyanova, echo=F}
 aov(log(Salary) ~ University, data = money) %>%
   pander()
+
+# TUKEY test.
+money.anova <- aov(log(Salary) ~ University, data = money)
+TukeyHSD(money.anova) %>%
+  pander()
 ```
 
 ### Multiple Group Mean Comparison
