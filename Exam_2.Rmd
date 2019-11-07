@@ -2,8 +2,10 @@
 title: "Exam 2"
 author: "Nate Lant"
 date: "11/2/2019"
-output: html_document
-editor_options: 
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
   chunk_output_type: console
 ---
 
@@ -13,12 +15,14 @@ library(tidyverse)
 library(readxl)
 library(pander)
 library(formattable)
+library(knitr)
 ```
 
 # Problem 1 - Crabs' Strength
 ```{r 1setup, include=F}
 crablength <- read_excel("examdata/question1E2.xlsx")
 ```
+
 The data provided describes the lengh of claw and the strength of each for `r nrow(crablength)` crabs. We will test if there is a relationship between the length of a claw and the amount of force it produces. Let the force of a claw be the response variable (y), described by the length of the claw (x).
 
 In this problem, we will regress force on length of claw sizes of crabs. First lets look at the data, and the scatter plot is shown below. It looks as if the data has a "horn" distribution.
@@ -32,6 +36,7 @@ ggplot(crablength, aes(x = length, y = force)) +
 
 ### Natural log transform
 Because of the horned distribution in the scatter plot shown above, let's try a log transform in the data and check the linear regression. The distribution is most linear when a log transform is applied to the force (response) variable, as shown below.
+
 ```{r logcrabs, echo=F}
 ggplot(crablength, aes(x = (length), y = log(force))) +
   geom_point() +
@@ -40,6 +45,7 @@ ggplot(crablength, aes(x = (length), y = log(force))) +
 
 <!-- This still has a curve in the distribution of log scores --> 
 This distribution looks much better. Now we can properly analyze the regression. Lets have a look at the residuals plot.
+
 ```{r crabsresiduals, echo=F}
 crab.lm <- lm(log(force) ~ (length), data = crablength)
 crablength$residuals <- residuals(crab.lm)
@@ -73,12 +79,19 @@ newdata.crab <- data.frame(length = 20)
 predict(crab.lm, newdata.crab, interval = "confidence") %>% round(3)
 ```
 
+A summary of the linear regression model is shown below.
+
+```{r crabsummary, echo=F}
+summary(crab.lm) %>% pander()
+```
+
 ### Conclusion
-From the information provided, there was no randomization. Therefore, we cannot infer to the population. From this sample, there is an association with length of claw and its strength. 
+From the information provided, there was no randomization. Therefore, we cannot infer to the population or any causality. From this sample, there is an association with length of claw and its strength. 
 An increase in length of one centimeter is associated with a multiplicitive change of 
 exp(`r summary(crab.lm)$coefficient[2, 1] %>% round(3)`) = 
 **`r exp(summary(crab.lm)$coefficient[2, 1]) %>% round(3)`** in the median claw strength.
 The confidence interval is shown in the linear model above. 
+The R.squared value tells us that there is strong association between the length of claw and its strength. The p-value is another strong indication that the association is significant.
 
 
 # Problem 2 - University Payday
@@ -101,7 +114,7 @@ ggplot(money, aes(x=University, y=Salary)) +
 # mean and sd table
 money %>% group_by(University) %>%
   summarise(Mean = mean(Salary), St.Dev = sd(Salary)) %>%
-  formattable(align = c("l", "c", "c"))
+  kable()
 ```
 
 Just from looking at the data, it's clear that Harvard has some major outliers, but you can't really distinguish any other information. Let's try another log transform (natural log) on the salary.
@@ -114,7 +127,7 @@ ggplot(money, aes(x=University, y=log(Salary))) +
 # mean and sd table
 money %>% group_by(University) %>%
   summarise(Mean = mean(log(Salary)), St.Dev = sd(log(Salary))) %>%
-  formattable(align = c("l", "c", "c"))
+  kable()
 ```
 
 From the log transform, the mean and standard deviations are similar. Lets run an Analysis Of Variance (ANOVA).
@@ -133,6 +146,7 @@ kruskal.test(log(Salary) ~ University, data = money) %>%
 ```
 
 Now let's do a Tukey-Kramer test to compare the difference in means.
+
 ```{r moneytukey, echo=F, warning=F}
 money.anova <- aov(log(Salary) ~ University, data = money)
 TukeyHSD(money.anova) %>%
@@ -148,15 +162,31 @@ In this research, the students were randomly selected, but they were not randoml
 ```{r 3setup, include=F}
 wait <- read_excel("examdata/question3E2.xlsx")
 ```
+
 At Quicky Lube, there is often a line of cars waiting for service. Over the period of three months, data were collected at randomly chosen times to see how wait time changed because of the number of cars in line. The null hypothesis is that there is no association between the number of cars in line and the wait time.
 
-Below is the scatterplot of number of cars regressed on the wait time and the summary of the linear regression.
+Below is the scatterplot of number of cars regressed on the wait time and the summary of the linear regression and the residuals plot.
+
 ```{r waittimevisualize, echo=F}
 # scatter plot
 ggplot(data = wait, aes(x=Cars, y=Time)) +
   geom_point() +
   geom_smooth(method = "lm")
+
+# Residuals plot
+wait.lm <- lm(Time ~ Cars, data = wait)
+wait$residuals <- residuals(wait.lm)
+
+ggplot(wait, aes(x = Cars, y = wait$residuals)) +
+  geom_point() +
+  geom_abline(slope = 0) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  theme_bw()
 ```
+
+
+### Results
+With no patterns in the residual error plot, we can use the linear regression summary to describe the relationship of wait time regressed on the number of cars. The summary is displayed below.
 
 ```{r analysis, echo=F}
 wait.lm <- lm(Time ~ Cars, data = wait)
@@ -189,7 +219,7 @@ However, this information cannot be reliable. This is called extrapolation, wher
 
 ### Conclusion
 From the information provided, the times were selected randomly, but the subjects were not randomly assigned. Therefore the associations found in this study can be infered to a population, but causality cannot be infered. The results show strong association with an 
-$ R^2 $ of `r summary(wait.lm)$r.squared%>%round(3)`
+$R^2$ of `r summary(wait.lm)$r.squared%>%round(3)`
 and a p-value of `r summary(wait.lm)$coefficients[1,4]%>%round(3)`. Because of this p-value, the association is suggestive but not inconclusive.
 The confidence intervals are shown above, and are represented in the linear model by the shaded area outside of the line.
 
@@ -197,9 +227,11 @@ The confidence intervals are shown above, and are represented in the linear mode
 ```{r 4setup, include=F}
 method <- read_excel("examdata/question4E2.xlsx")
 ```
+
 Three new methods of teaching are being introduced, and we will decide if there are any differences between any of the mean scores for the different methods. We are only interested in comparisons between the conventional method and each of the new methods.
 
 First, see the boxplot visualization and mean summary tables below.
+
 ```{r 4analysis, echo=F}
 # boxplot
 ggplot(data = method, aes(x = Method, y = Score)) +
@@ -209,18 +241,28 @@ ggplot(data = method, aes(x = Method, y = Score)) +
 # mean summary
 method %>% group_by(Method) %>%
   summarise(Mean = mean(Score), St.Dev = round(sd(Score), 2)) %>%
-  formattable(align = c("l", "c", "c"))
+  kable()
 ```
 
-Because there are no assumptions that are compromised <!-- what are the assumptions of an anova test? --> then we can run an Analysis of Variance to decide if there is a significant difference in teaching methods. The results are displayed below.
+The conventional method appears to have the highest mean. And because there are no assumptions that are compromised (including normality, linearity, equal variance, and independent samples), we can run an Analysis of Variance (ANOVA) to decide if there is a significant difference in teaching methods. The results are displayed below.
 
 ```{r 4anova, echo=F}
 method.aov <- aov(Score ~ Method, data = method)
 pander(method.aov)
 ```
 
+The ANOVA test yields a p-value that tells us there is a significant difference in the means, but we can't tell what group is significantly different. To understand the difference in means, we will run the Tukey-Kramer test. We are only interested in comparisons between the control (conventional) method and each of the new methods. (I couldn't figure out how to filter the table to only relevant comparisons.)
+
+```{r teachingtukey, echo=F, warning=F}
+method.aov <- aov(Score ~ Method, data = method)
+TukeyHSD(method.aov) %>% 
+  pander()
+```
+
+This table shows that there isn't a significant difference between the conventional method and any of the new methods.
+
 ### Conclusion
-<!--- With a p-value of  r round(method.aov$pvalue)  This isn't working, do i actually use a pvalue? or maybe the f stat?---> 
+The problem does not describe if the study was randomized in any way. Therefore we can neither infer these associations to the population nor infer causality. The p-values from the Tukey test show that association is suggestive but not inconclusive. We cannot reject the null that all means are equal. The difference in means and confidence intervals are shown above.
 
 
 
